@@ -143,7 +143,7 @@
     <MicrosoftExtensionsValueStopwatchSourcesPackageVersion>3.0.0-preview7.19328.2</MicrosoftExtensionsValueStopwatchSourcesPackageVersion>
     <MicrosoftExtensionsWebEncodersPackageVersion>3.0.0-preview7.19328.2</MicrosoftExtensionsWebEncodersPackageVersion>
     <MicrosoftInternalExtensionsRefsPackageVersion>3.0.0-preview7.19328.2</MicrosoftInternalExtensionsRefsPackageVersion>
-    <MicrosoftJSInteropPackageVersion>3.0.0-preview7.19328.2</MicrosoftJSInteropPackageVersion>
+    <MicrosoftJSInteropPackageVersion>3.0.0-preview8.19352.1</MicrosoftJSInteropPackageVersion>
     <MonoWebAssemblyInteropPackageVersion>3.0.0-preview7.19328.2</MonoWebAssemblyInteropPackageVersion>
     <!-- Packages from aspnet/EntityFrameworkCore -->
     <dotnetefPackageVersion>3.0.0-preview8.19351.2</dotnetefPackageVersion>
