@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components.Layouts;
+using Microsoft.AspNetCore.Components.Reflection;
 using Microsoft.AspNetCore.Components.RenderTree;
 
 namespace Microsoft.AspNetCore.Components.Routing
@@ -28,6 +29,8 @@ namespace Microsoft.AspNetCore.Components.Routing
         [Inject] private INavigationInterception NavigationInterception { get; set; }
 
         [Inject] private IComponentContext ComponentContext { get; set; }
+
+        [Inject] private ComponentResolver ComponentResolver { get; set; }
 
         /// <summary>
         /// Gets or sets the assembly that should be searched, along with its referenced

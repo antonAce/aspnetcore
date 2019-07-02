@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Net.Http;
 using Microsoft.AspNetCore.Blazor.Services;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Reflection;
 using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -93,6 +94,7 @@ namespace Microsoft.AspNetCore.Blazor.Hosting
             services.AddSingleton<IJSRuntime>(WebAssemblyJSRuntime.Instance);
             services.AddSingleton<IComponentContext, WebAssemblyComponentContext>();
             services.AddSingleton<IUriHelper>(WebAssemblyUriHelper.Instance);
+            services.AddSingleton<ComponentResolver>();
             services.AddSingleton<INavigationInterception>(WebAssemblyNavigationInterception.Instance);
             services.AddSingleton<ILoggerFactory, WebAssemblyLoggerFactory>();
             services.AddSingleton<HttpClient>(s =>

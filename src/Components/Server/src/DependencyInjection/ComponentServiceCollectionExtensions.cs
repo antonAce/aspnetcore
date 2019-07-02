@@ -4,6 +4,7 @@
 using System;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Reflection;
 using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.AspNetCore.Components.Server;
 using Microsoft.AspNetCore.Components.Server.BlazorPack;
@@ -77,6 +78,8 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddScoped<INavigationInterception, RemoteNavigationInterception>();
             services.AddScoped<IComponentContext, RemoteComponentContext>();
             services.AddScoped<AuthenticationStateProvider, FixedAuthenticationStateProvider>();
+
+            services.TryAddSingleton<ComponentResolver>();
 
             if (configure != null)
             {

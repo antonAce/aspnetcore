@@ -6,28 +6,45 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace Microsoft.AspNetCore.Components
+namespace Microsoft.AspNetCore.Components.Reflection
 {
     /// <summary>
     /// Resolves components for an application.
     /// </summary>
-    internal static class ComponentResolver
+    public sealed class ComponentResolver
     {
-        /// <summary>
-        /// Lists all the types
-        /// </summary>
-        /// <param name="appAssembly"></param>
-        /// <returns></returns>
-        public static IEnumerable<Type> ResolveComponents(Assembly appAssembly)
+        private Assembly _cachedAssembly;
+        private IReadOnlyList<Type> _resolvedComponents;
+
+        public IReadOnlyList<Type> ResolveComponents(Assembly assembly)
+        {
+            if (_cachedAssembly == assembly)
+            {
+                return _resolvedComponents;
+            }
+
+            var resolvedComponents = ResolveComponentsCore(assembly);
+
+            if (_cachedAssembly is null)
+            {
+                _resolvedComponents = resolvedComponents;
+                _cachedAssembly = assembly;
+            }
+
+            return _resolvedComponents;
+        }
+
+        private IReadOnlyList<Type> ResolveComponentsCore(Assembly assembly)
         {
             var componentsAssembly = typeof(IComponent).Assembly;
 
-            return EnumerateAssemblies(appAssembly.GetName(), componentsAssembly, new HashSet<Assembly>(new AssemblyComparer()))
+            return EnumerateAssemblies(assembly.GetName(), componentsAssembly, new HashSet<Assembly>())
                 .SelectMany(a => a.ExportedTypes)
-                .Where(t => typeof(IComponent).IsAssignableFrom(t));
+                .Where(t => typeof(IComponent).IsAssignableFrom(t))
+                .ToList();
         }
 
-        private static IEnumerable<Assembly> EnumerateAssemblies(
+        private IEnumerable<Assembly> EnumerateAssemblies(
             AssemblyName assemblyName,
             Assembly componentAssembly,
             HashSet<Assembly> visited)
