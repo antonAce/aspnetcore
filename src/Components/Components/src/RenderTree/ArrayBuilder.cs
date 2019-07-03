@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
+using System.Buffers;
 using System.Runtime.CompilerServices;
 
 namespace Microsoft.AspNetCore.Components.RenderTree
@@ -15,11 +16,13 @@ namespace Microsoft.AspNetCore.Components.RenderTree
     /// components can be long-lived and re-render frequently, with the rendered size
     /// varying dramatically depending on the user's navigation in the app.
     /// </summary>
-    internal class ArrayBuilder<T>
+    internal class ArrayBuilder<T> : IDisposable
     {
+        private static readonly T[] Empty = Array.Empty<T>();
         private const int MinCapacity = 10;
         private T[] _items;
         private int _itemsInUse;
+        private bool _disposed;
 
         /// <summary>
         /// Constructs a new instance of <see cref="ArrayBuilder{T}"/>.
@@ -33,7 +36,7 @@ namespace Microsoft.AspNetCore.Components.RenderTree
         /// </summary>
         public ArrayBuilder(int capacity)
         {
-            _items = new T[capacity < MinCapacity ? MinCapacity : capacity];
+            _items = Empty;
             _itemsInUse = 0;
         }
 
@@ -72,7 +75,7 @@ namespace Microsoft.AspNetCore.Components.RenderTree
             var requiredCapacity = _itemsInUse + length;
             if (_items.Length < requiredCapacity)
             {
-                var candidateCapacity = _items.Length * 2;
+                var candidateCapacity = Math.Max(_items.Length * 2, MinCapacity);
                 while (candidateCapacity < requiredCapacity)
                 {
                     candidateCapacity *= 2;
@@ -131,17 +134,8 @@ namespace Microsoft.AspNetCore.Components.RenderTree
         /// </summary>
         public void Clear()
         {
-            var previousItemsInUse = _itemsInUse;
+            ReturnItems();
             _itemsInUse = 0;
-
-            if (_items.Length > previousItemsInUse * 1.5)
-            {
-                SetCapacity((previousItemsInUse + _items.Length) / 2, preserveContents: false);
-            }
-            else if (previousItemsInUse > 0)
-            {
-                Array.Clear(_items, 0, previousItemsInUse); // Release to GC
-            }
         }
 
         /// <summary>
@@ -162,26 +156,42 @@ namespace Microsoft.AspNetCore.Components.RenderTree
 
         private void SetCapacity(int desiredCapacity, bool preserveContents)
         {
-            if (desiredCapacity < _itemsInUse)
-            {
-                throw new ArgumentOutOfRangeException(nameof(desiredCapacity), $"The value cannot be less than {nameof(Count)}");
-            }
-
-            var newCapacity = desiredCapacity < MinCapacity ? MinCapacity : desiredCapacity;
+            var newCapacity = Math.Max(desiredCapacity, MinCapacity);
             if (newCapacity != _items.Length)
             {
-                var newItems = new T[newCapacity];
+                var newItems = ArrayPool<T>.Shared.Rent(newCapacity);
 
                 if (preserveContents)
                 {
                     Array.Copy(_items, newItems, _itemsInUse);
                 }
 
+                ReturnItems();
+
                 _items = newItems;
+
             }
             else if (!preserveContents)
             {
                 Array.Clear(_items, 0, _items.Length);
+            }
+        }
+
+        private void ReturnItems()
+        {
+            if (!ReferenceEquals(_items, Empty))
+            {
+                ArrayPool<T>.Shared.Return(_items, clearArray: true);
+                _items = Empty;
+            }
+        }
+
+        public void Dispose()
+        {
+            if (!_disposed)
+            {
+                _disposed = true;
+                ReturnItems();
             }
         }
     }

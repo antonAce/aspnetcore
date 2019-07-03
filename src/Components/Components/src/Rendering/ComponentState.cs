@@ -13,7 +13,7 @@ namespace Microsoft.AspNetCore.Components.Rendering
     /// within the context of a <see cref="Renderer"/>. This is an internal implementation
     /// detail of <see cref="Renderer"/>.
     /// </summary>
-    internal class ComponentState
+    internal class ComponentState : IDisposable
     {
         private readonly Renderer _renderer;
         private readonly IReadOnlyList<CascadingParameterState> _cascadingParameters;
@@ -166,6 +166,15 @@ namespace Microsoft.AspNetCore.Components.Rendering
             for (var i = 0; i < numCascadingParameters; i++)
             {
                 _cascadingParameters[i].ValueSupplier.Unsubscribe(this);
+            }
+        }
+
+        public void Dispose()
+        {
+            _latestDirectParametersSnapshot?.Dispose();
+            if (Component is IDisposable disposable)
+            {
+                disposable.Dispose();
             }
         }
     }
