@@ -18,7 +18,8 @@ namespace Microsoft.AspNetCore.Components.Analyzers
         {
             SupportedDiagnostics = ImmutableArray.Create(new[]
             {
-                DiagnosticDescriptors.ComponentParametersShouldNotBePublic,
+                DiagnosticDescriptors.ComponentParametersShouldBePublic,
+                DiagnosticDescriptors.ComponentParameterSettersShouldBePublic,
                 DiagnosticDescriptors.ComponentParameterCaptureUnmatchedValuesMustBeUnique,
                 DiagnosticDescriptors.ComponentParameterCaptureUnmatchedValuesHasWrongType,
             });
@@ -61,13 +62,20 @@ namespace Microsoft.AspNetCore.Components.Analyzers
                     {
                         var captureUnmatchedValuesParameters = new List<IPropertySymbol>();
 
-                            // Per-property validations
-                            foreach (var property in properties)
+                        // Per-property validations
+                        foreach (var property in properties)
                         {
-                            if (property.SetMethod?.DeclaredAccessibility == Accessibility.Public)
+                            if (property.DeclaredAccessibility != Accessibility.Public)
                             {
                                 context.ReportDiagnostic(Diagnostic.Create(
-                                    DiagnosticDescriptors.ComponentParametersShouldNotBePublic,
+                                    DiagnosticDescriptors.ComponentParametersShouldBePublic,
+                                    property.Locations[0],
+                                    property.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat)));
+                            }
+                            else if (property.SetMethod?.DeclaredAccessibility != Accessibility.Public)
+                            {
+                                context.ReportDiagnostic(Diagnostic.Create(
+                                    DiagnosticDescriptors.ComponentParameterSettersShouldBePublic,
                                     property.Locations[0],
                                     property.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat)));
                             }
@@ -76,8 +84,8 @@ namespace Microsoft.AspNetCore.Components.Analyzers
                             {
                                 captureUnmatchedValuesParameters.Add(property);
 
-                                    // Check the type, we need to be able to assign a Dictionary<string, object>
-                                    var conversion = context.Compilation.ClassifyConversion(symbols.ParameterCaptureUnmatchedValuesRuntimeType, property.Type);
+                                // Check the type, we need to be able to assign a Dictionary<string, object>
+                                var conversion = context.Compilation.ClassifyConversion(symbols.ParameterCaptureUnmatchedValuesRuntimeType, property.Type);
                                 if (!conversion.Exists || conversion.IsExplicit)
                                 {
                                     context.ReportDiagnostic(Diagnostic.Create(
@@ -90,9 +98,9 @@ namespace Microsoft.AspNetCore.Components.Analyzers
                             }
                         }
 
-                            // Check if the type defines multiple CaptureUnmatchedValues parameters. Doing this outside the loop means we place the
-                            // errors on the type.
-                            if (captureUnmatchedValuesParameters.Count > 1)
+                        // Check if the type defines multiple CaptureUnmatchedValues parameters. Doing this outside the loop means we place the
+                        // errors on the type.
+                        if (captureUnmatchedValuesParameters.Count > 1)
                         {
                             context.ReportDiagnostic(Diagnostic.Create(
                                 DiagnosticDescriptors.ComponentParameterCaptureUnmatchedValuesMustBeUnique,
